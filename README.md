@@ -4,7 +4,7 @@
 ## 效果
 
 
-<video src='https://postimg.aliavv.com/picgo/202302100113456.mp4' ></video>
+https://user-images.githubusercontent.com/13283837/217905601-6e1ff237-5275-4deb-8135-3071b1e977a8.mp4
 
 
 ## 如何使用本项目代码？
