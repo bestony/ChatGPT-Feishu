@@ -9,7 +9,7 @@ https://user-images.githubusercontent.com/13283837/217905601-6e1ff237-5275-4deb-
 
 ## 如何使用本项目代码？
 
-> 视频教程见 -> 
+> 视频教程见 -> https://youtu.be/axvH1D0Dhnk
 
 ### 1. 创建一个飞书开放平台应用，并获取到 APPID 和 Secret
 
