@@ -43,7 +43,15 @@ https://user-images.githubusercontent.com/13283837/217905601-6e1ff237-5275-4deb-
 
 ![image-20230210012808063](https://postimg.aliavv.com/picgo/202302100128288.png)
 
-### 3. 配置环境变量
+
+
+### 5. 安装所需依赖
+
+这个开发过程中，我们使用了飞书开放平台官方提供的 SDK，以及 axios 来完成调用。点击页面左下角的包管理器，安装 `axios` 和 `@larksuiteoapi/node-sdk`。安装完成后，点击上方的部署，使其生效。
+
+![image-20230210025955556](https://postimg.aliavv.com/picgo/202302100259761.png)
+
+### 6. 配置环境变量
 
 接下来我们来配置环境变量，你需要配置三个环境变量 `APPID` 、`SECRET` 和 `BOTNAME`，APPID 填写你刚刚在飞书开放平台获取的 APPID，SECRET 填写你在飞书开放平台获取到的 SECRET，BOTNAME 填写你的机器人的名字。
 
@@ -57,7 +65,7 @@ https://user-images.githubusercontent.com/13283837/217905601-6e1ff237-5275-4deb-
 
 ![image-20230210013603084](https://postimg.aliavv.com/picgo/202302100136124.png)
 
-### 4. 获取 OpenAI 的 KEY ，并配置环境变量
+### 7. 获取 OpenAI 的 KEY ，并配置环境变量
 
 访问 [Account API Keys - OpenAI API](https://platform.openai.com/account/api-keys) ，点击这里的 Create new secret key ，创建一个新的 key ，并保存备用。
 
@@ -67,7 +75,7 @@ https://user-images.githubusercontent.com/13283837/217905601-6e1ff237-5275-4deb-
 
 ![image-20230210022322720](https://postimg.aliavv.com/picgo/202302100223839.png)
 
-### 5. 开启权限并配置事件
+### 8. 开启权限并配置事件
 
 访问开放平台页面，开通如下 6 个权限：
 
@@ -88,7 +96,7 @@ https://user-images.githubusercontent.com/13283837/217905601-6e1ff237-5275-4deb-
 
 ![image-20230210022720552](https://postimg.aliavv.com/picgo/202302100227786.png)
 
-### 6. 发布版本，等待审核
+### 9. 发布版本，等待审核
 
 上述这些都配置完成后，你的机器人就配置好了，接下来只需要在飞书开放平台后台找到应用发布，创建一个全新的版本并发布版本即可。
 
