@@ -3,7 +3,9 @@
 
 ## 效果
 
-<video src="https://postimg.aliavv.com/picgo/202302100113456.mp4"/>
+
+<video src='https://postimg.aliavv.com/picgo/202302100113456.mp4' ></video>
+
 
 ## 如何使用本项目代码？
 
