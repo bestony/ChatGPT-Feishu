@@ -9,6 +9,8 @@ const client = new lark.Client({
     appSecret: process.env.SECRET,
     disableTokenCache: false
 });
+//用于存放历史问答，写死支持10个，下面有判断
+const historyQuestion = [];
 
 // 回复消息
 async function reply(messageId, content) {
@@ -84,9 +86,17 @@ module.exports = async function (params, context) {
             if (params.event.message.message_type != "text") {
                 await reply(messageId, "暂不支持其他类型的提问")
             }
+            const historyText = historyQuestion.join(" ");
             // 是文本消息，直接回复
-            const userInput = JSON.parse(params.event.message.content);
-            const openaiResponse = await getOpenAIReply(userInput.text)
+            const userInput = JSON.parse(params.event.message.content) ;
+            
+            const openaiResponse = await getOpenAIReply(`${historyText}\nHuman: ${userInput.text}`)
+
+            historyQuestion.push(`\nHuman: ${userInput}\nAI: ${openaiResponse}`);
+            //最多存10个问答
+            if(historyQuestion.length > 10){
+                historyQuestion = historyQuestion.slice(1,historyQuestion.length);
+            }
             await reply(messageId, openaiResponse)
         }
 
