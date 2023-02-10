@@ -27,10 +27,17 @@ async function reply(messageId, content) {
 
 // 通过 OpenAI API 获取回复
 async function getOpenAIReply(content) {
+    var prompt = "你是 ChatGPT, 一个由 OpenAI 训练的大型语言模型, 你旨在回答并解决人们的任何问题，并且可以使用多种语言与人交流。\n请回答我下面的问题\nQ: " + content + "\nA: ";
+  
     var data = JSON.stringify({
         "model": "text-davinci-003",
-        "prompt": content,
-        "max_tokens": 1024
+        "prompt": prompt,
+        "max_tokens": 1024,
+        "temperature": 0.9,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "top_p": 1,
+        "stop":["#"]
     });
 
     var config = {
