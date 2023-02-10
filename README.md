@@ -1,6 +1,11 @@
 # ChatGPT-Feishu
 给飞书用户准备的 ChatGPT 机器人。视频演示如下，生成略慢，请耐心等待~
 
+## 有问题沟通可加群
+
+![image](https://user-images.githubusercontent.com/13283837/218001986-2b79cc73-52c9-43db-b07e-bf78cc0cedab.png)
+
+
 ## 效果
 
 
