@@ -1,9 +1,6 @@
 # ChatGPT-Feishu
 给飞书用户准备的 ChatGPT 机器人。视频演示如下，生成略慢，请耐心等待~
 
-## 有问题沟通可加群
-
-![image](https://user-images.githubusercontent.com/13283837/218001986-2b79cc73-52c9-43db-b07e-bf78cc0cedab.png)
 
 
 ## 效果
@@ -114,6 +111,29 @@ https://user-images.githubusercontent.com/13283837/217905601-6e1ff237-5275-4deb-
 ![image-20230210022834052](https://postimg.aliavv.com/picgo/202302100228159.png)
 
 
+## 有问题沟通可加群
+
+![image](https://user-images.githubusercontent.com/13283837/218001986-2b79cc73-52c9-43db-b07e-bf78cc0cedab.png)
+
+
+## FAQ
+
+### 1. 提交事件订阅地址时提示 Challenge Code 没有返回？
+可以看看是不是配置了  Encrypt Key ，暂时不支持对加密数据解密。路径是应用后台 - 事件订阅
+
+![image](https://user-images.githubusercontent.com/13283837/218002249-362a40ab-3f5d-493b-80ec-a2b0efa2b5c9.png)
+
+### 2. 可以私聊回复，但没办法群聊回复？
+
+确保 6 个权限都已经开通且已经发布版本，权限进入可用状态。
+
+### 3. aircode 提示报错 failed to obtain token?
+
+说明你的 aircode 的环境变量配置没成功，可以重新配置一下，然后再部署一下。
+
+### 4. cannot set propoertis of undefined (setting 'event_type')?
+
+说明你用 HTTP 发起请求 / 或者用了 aircode 的debug 功能，是正常现象。
 
 ## LICENSE
 
