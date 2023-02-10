@@ -55,6 +55,8 @@ https://user-images.githubusercontent.com/13283837/217905601-6e1ff237-5275-4deb-
 
 接下来我们来配置环境变量，你需要配置三个环境变量 `APPID` 、`SECRET` 和 `BOTNAME`，APPID 填写你刚刚在飞书开放平台获取的 APPID，SECRET 填写你在飞书开放平台获取到的 SECRET，BOTNAME 填写你的机器人的名字。
 
+> 配置环境变量可能会失败，可以多 deploy 几次，确保配置成功。
+
 ![image-20230210013355689](https://postimg.aliavv.com/picgo/202302100133798.png)
 
 配置完成后，点击上方的 **Deploy** 按钮部署，使这些环境变量生效。
