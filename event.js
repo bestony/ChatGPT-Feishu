@@ -1,4 +1,4 @@
-// @version 0.0.3 新增了环境变量，以解决aircode 的时不时抽风问题
+// @version 0.0.4 新增自检能力
 const aircode = require('aircode');
 const lark = require('@larksuiteoapi/node-sdk');
 var axios = require('axios');
@@ -77,7 +77,88 @@ async function getOpenAIReply(content) {
     return response.data.choices[0].text.replace("\n\n", "")
 }
 
+// 自检函数
+async function doctor() {
+
+  if(FEISHU_APP_ID == ""){
+    return {
+      code: 1, 
+      message:{
+        zh_CN: "你没有配置飞书应用的 AppID，请检查 & 部署后重试",
+        en_US: "Here is no FeiSHu APP id, please check & re-Deploy & call again"
+      }
+    }
+  }
+  if(!FEISHU_APP_ID.startsWith("cli_")){
+    return {
+      code: 1, 
+      message:{
+        zh_CN: "你配置的飞书应用的 AppID 是错误的，请检查后重试。飞书应用的 APPID 以 cli_ 开头。",
+        en_US: "Your FeiShu App ID is Wrong, Please Check and call again. FeiShu APPID must Start with cli"
+      }
+    }
+  }
+  if(FEISHU_APP_SECRET == ""){
+    return {
+      code: 1, 
+      message:{
+        zh_CN: "你没有配置飞书应用的 Secret，请检查 & 部署后重试",
+        en_US: "Here is no FeiSHu APP Secret, please check & re-Deploy & call again"
+      }
+    }
+  }
+
+  if(FEISHU_BOTNAME == ""){
+    return {
+      code: 1, 
+      message:{
+        zh_CN: "你没有配置飞书应用的名称，请检查 & 部署后重试",
+        en_US: "Here is no FeiSHu APP Name, please check & re-Deploy & call again"
+      }
+    }
+  }
+  
+  if(OPENAI_KEY == ""){
+    return {
+      code: 1, 
+      message:{
+        zh_CN: "你没有配置 OpenAI 的 Key，请检查 & 部署后重试",
+        en_US: "Here is no OpenAI Key, please check & re-Deploy & call again"
+      }
+    }
+  }
+
+   if(!OPENAI_KEY.startsWith("sk-")){
+    return {
+      code: 1, 
+      message:{
+        zh_CN: "你配置的 OpenAI Key 是错误的，请检查后重试。飞书应用的 APPID 以 cli_ 开头。",
+        en_US: "Your OpenAI Key is Wrong, Please Check and call again. FeiShu APPID must Start with cli"
+      }
+    }
+  }
+  return {
+    code: 0,
+    message: {
+      zh_CN:
+        "✅ Configuration is correct, you can use this bot in your FeiShu App",
+      en_US:
+        "✅ 配置成功，接下来你可以在飞书应用当中使用机器人来完成你的工作。",
+    },
+    meta:{
+     FEISHU_APP_ID,
+     OPENAI_MODEL,
+     OPENAI_MAX_TOKEN,
+     FEISHU_BOTNAME
+    }
+  };
+}
+
 module.exports = async function (params, context) {
+    // 自检查逻辑
+    if(!params.hasOwnProperty("header") || context.trigger == "DEBUG"){
+      return await doctor();  
+    }
     // 处理飞书开放平台的服务端校验
     if (params.type == "url_verification") {
         return {
