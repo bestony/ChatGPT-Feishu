@@ -43,14 +43,14 @@ async function getOpenAIReply(content) {
     var prompt = getPrompt(content.trim());
   
     var data = JSON.stringify({
-        "model": "text-davinci-003",
+        "model": process.env.MODEL || "text-davinci-003",
         "prompt": prompt,
-        "max_tokens": 1024,
+        "max_tokens": process.env.MAX_TOKEN || 1024,
         "temperature": 0.9,
         "frequency_penalty": 0.0,
         "presence_penalty": 0.0,
         "top_p": 1,
-        "stop":["#"]
+        "stop": ["#"]
     });
 
     var config = {
@@ -82,12 +82,12 @@ module.exports = async function (params, context) {
         let eventId = params.header.event_id;
         let messageId = params.event.message.message_id;
 
-         // 对于同一个事件，只处理一次
+        // 对于同一个事件，只处理一次
         const count = await EventDB.where({ event_id: eventId }).count();
         if (count != 0) {
             return { code: 1 }
         }
-        await EventDB.save({event_id: eventId})
+        await EventDB.save({ event_id: eventId })
 
 
 
@@ -122,6 +122,6 @@ module.exports = async function (params, context) {
         }
     }
     return {
-        code:2
+        code: 2
     };
 }
