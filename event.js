@@ -1,12 +1,20 @@
-// @version 0.0.2
+// @version 0.0.3 新增了环境变量，以解决aircode 的时不时抽风问题
 const aircode = require('aircode');
 const lark = require('@larksuiteoapi/node-sdk');
 var axios = require('axios');
 const EventDB = aircode.db.table('event');
 
+// 如果你不想配置环境变量，或环境变量不生效，则可以把结果填写在每一行最后的 "" 内部
+const FEISHU_APP_ID = process.env.APPID || "";  // 飞书的应用 ID
+const FEISHU_APP_SECRET = process.env.SECRET  || ""; // 飞书的应用的 Secret
+const FEISHU_BOTNAME = process.env.BOTNAME || ""; // 飞书机器人的名字
+const OPENAI_KEY = process.env.KEY || ""; // OpenAI 的 Key
+const OPENAI_MODEL = process.env.MODEL || "text-davinci-003"; // 使用的模型
+const OPENAI_MAX_TOKEN = process.env.MAX_TOKEN || 1024; // 最大 token 的值
+
 const client = new lark.Client({
-    appId: process.env.APPID,
-    appSecret: process.env.SECRET,
+    appId: FEISHU_APP_ID,
+    appSecret: FEISHU_APP_SECRET,
     disableTokenCache: false
 });
 
@@ -43,9 +51,9 @@ async function getOpenAIReply(content) {
     var prompt = getPrompt(content.trim());
   
     var data = JSON.stringify({
-        "model": process.env.MODEL || "text-davinci-003",
+        "model": OPENAI_MODEL,
         "prompt": prompt,
-        "max_tokens": process.env.MAX_TOKEN || 1024,
+        "max_tokens": OPENAI_MAX_TOKEN,
         "temperature": 0.9,
         "frequency_penalty": 0.0,
         "presence_penalty": 0.0,
@@ -58,7 +66,7 @@ async function getOpenAIReply(content) {
         maxBodyLength: Infinity,
         url: 'https://api.openai.com/v1/completions',
         headers: {
-            'Authorization': `Bearer ${process.env.KEY}`,
+            'Authorization': `Bearer ${OPENAI_KEY}`,
             'Content-Type': 'application/json'
         },
         data: data
@@ -111,7 +119,7 @@ module.exports = async function (params, context) {
                 return { "code": 0 }
             }
             // 没有 mention 机器人，则退出。
-            if (params.event.message.mentions[0].name != process.env.BOTNAME) {
+            if (params.event.message.mentions[0].name != FEISHU_BOTNAME) {
                 return { "code": 0 }
             }
             const userInput = JSON.parse(params.event.message.content);
