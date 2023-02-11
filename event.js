@@ -32,7 +32,7 @@ async function getOpenAIReply(content) {
     var data = JSON.stringify({
         "model": process.env.MODEL || "text-davinci-003",
         "prompt": prompt,
-        "max_tokens": 1024,
+        "max_tokens": process.env.MAX_TOKEN || 1024,
         "temperature": 0.9,
         "frequency_penalty": 0.0,
         "presence_penalty": 0.0,
