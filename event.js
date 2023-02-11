@@ -187,11 +187,6 @@ async function doctor() {
 }
 
 module.exports = async function (params, context) {
-  // 自检查逻辑
-  if (!params.hasOwnProperty("header") || context.trigger == "DEBUG") {
-    logger("enter doctor");
-    return await doctor();
-  }
   // 如果存在 encrypt 则说明配置了 encrypt key
   if (params.encrypt) {
     logger("user enable encrypt key");
@@ -209,6 +204,11 @@ module.exports = async function (params, context) {
     return {
       challenge: params.challenge,
     };
+  }
+  // 自检查逻辑
+  if (!params.hasOwnProperty("header") || context.trigger == "DEBUG") {
+    logger("enter doctor");
+    return await doctor();
   }
   // 处理飞书开放平台的事件回调
   if ((params.header.event_type = "im.message.receive_v1")) {
