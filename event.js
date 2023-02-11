@@ -25,9 +25,22 @@ async function reply(messageId, content) {
     })
 }
 
+// 根据中英文设置不同的 prompt
+function getPrompt(content) {
+  if(content.length == 0) {
+    return ''
+  }
+  if((content[0] >= 'a' && content[0] <= 'z') || (content[0] >= 'A' && content[0] <= 'Z')) {
+    return "You are ChatGPT, a LLM model trained by OpenAI. \nplease answer my following question\nQ: " + content + "\nA: ";
+  }
+  
+  return "你是 ChatGPT, 一个由 OpenAI 训练的大型语言模型, 你旨在回答并解决人们的任何问题，并且可以使用多种语言与人交流。\n请回答我下面的问题\nQ: " + content + "\nA: ";
+}
+
+
 // 通过 OpenAI API 获取回复
 async function getOpenAIReply(content) {
-    var prompt = "你是 ChatGPT, 一个由 OpenAI 训练的大型语言模型, 你旨在回答并解决人们的任何问题，并且可以使用多种语言与人交流。\n请回答我下面的问题\nQ: " + content + "\nA: ";
+    var prompt = getPrompt(content.trim());
   
     var data = JSON.stringify({
         "model": "text-davinci-003",
