@@ -1,4 +1,4 @@
-// @see https://docs.aircode.io/guide/functions/
+// @version 0.0.2
 const aircode = require('aircode');
 const lark = require('@larksuiteoapi/node-sdk');
 var axios = require('axios');
