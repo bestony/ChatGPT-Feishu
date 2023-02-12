@@ -211,7 +211,7 @@ module.exports = async function (params, context) {
     return await doctor();
   }
   // 处理飞书开放平台的事件回调
-  if ((params.header.event_type = "im.message.receive_v1")) {
+  if ((params.header.event_type == "im.message.receive_v1")) {
     let eventId = params.header.event_id;
     let messageId = params.event.message.message_id;
 
