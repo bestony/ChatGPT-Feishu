@@ -44,7 +44,7 @@ async function reply(messageId, content) {
 
 // 根据中英文设置不同的 prompt
 function getPrompt(content) {
-  if (content.length == 0) {
+  if (content.length === 0) {
     return "";
   }
   if (
@@ -105,7 +105,7 @@ async function getOpenAIReply(content) {
 
 // 自检函数
 async function doctor() {
-  if (FEISHU_APP_ID == "") {
+  if (FEISHU_APP_ID === "") {
     return {
       code: 1,
       message: {
@@ -126,7 +126,7 @@ async function doctor() {
       },
     };
   }
-  if (FEISHU_APP_SECRET == "") {
+  if (FEISHU_APP_SECRET === "") {
     return {
       code: 1,
       message: {
@@ -137,7 +137,7 @@ async function doctor() {
     };
   }
 
-  if (FEISHU_BOTNAME == "") {
+  if (FEISHU_BOTNAME === "") {
     return {
       code: 1,
       message: {
@@ -148,7 +148,7 @@ async function doctor() {
     };
   }
 
-  if (OPENAI_KEY == "") {
+  if (OPENAI_KEY === "") {
     return {
       code: 1,
       message: {
@@ -199,19 +199,19 @@ module.exports = async function (params, context) {
     };
   }
   // 处理飞书开放平台的服务端校验
-  if (params.type == "url_verification") {
+  if (params.type === "url_verification") {
     logger("deal url_verification");
     return {
       challenge: params.challenge,
     };
   }
   // 自检查逻辑
-  if (!params.hasOwnProperty("header") || context.trigger == "DEBUG") {
+  if (!params.hasOwnProperty("header") || context.trigger === "DEBUG") {
     logger("enter doctor");
     return await doctor();
   }
   // 处理飞书开放平台的事件回调
-  if ((params.header.event_type = "im.message.receive_v1")) {
+  if ((params.header.event_type === "im.message.receive_v1")) {
     let eventId = params.header.event_id;
     let messageId = params.event.message.message_id;
 
@@ -224,7 +224,7 @@ module.exports = async function (params, context) {
     await EventDB.save({ event_id: eventId });
 
     // 私聊直接回复
-    if (params.event.message.chat_type == "p2p") {
+    if (params.event.message.chat_type === "p2p") {
       // 不是文本消息，不处理
       if (params.event.message.message_type != "text") {
         await reply(messageId, "暂不支持其他类型的提问");
@@ -239,11 +239,11 @@ module.exports = async function (params, context) {
     }
 
     // 群聊，需要 @ 机器人
-    if (params.event.message.chat_type == "group") {
+    if (params.event.message.chat_type === "group") {
       // 这是日常群沟通，不用管
       if (
         !params.event.message.mentions ||
-        params.event.message.mentions.length == 0
+        params.event.message.mentions.length === 0
       ) {
         logger("not process message without mention");
         return { code: 0 };
