@@ -93,6 +93,10 @@ async function getOpenAIReply(content) {
 
   try{
       const response = await axios(config);
+    
+      if (response.status === 429) {
+        return '请求过于频繁，请稍后再试';
+      }
       // 去除多余的换行
       return response.data.choices[0].text.replace("\n\n", "");
     
