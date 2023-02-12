@@ -188,7 +188,7 @@ async function doctor() {
 
 module.exports = async function (params, context) {
   // 自检查逻辑
-  if (!params.hasOwnProperty("header") || context.trigger == "DEBUG") {
+  if (context.trigger == "DEBUG") {
     logger("enter doctor");
     return await doctor();
   }
