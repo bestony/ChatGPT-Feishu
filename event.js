@@ -12,6 +12,8 @@ const OPENAI_KEY = process.env.KEY || ""; // OpenAI 的 Key
 const OPENAI_MODEL = process.env.MODEL || "text-davinci-003"; // 使用的模型
 const OPENAI_MAX_TOKEN = process.env.MAX_TOKEN || 1024; // 最大 token 的值
 
+const glboalSession = new Map(); // 用于保存历史会话的map对象
+
 const client = new lark.Client({
   appId: FEISHU_APP_ID,
   appSecret: FEISHU_APP_SECRET,
@@ -42,32 +44,60 @@ async function reply(messageId, content) {
   }
 }
 
-// 根据中英文设置不同的 prompt
-function getPrompt(content) {
-  if (content.length === 0) {
-    return "";
-  }
-  if (
-    (content[0] >= "a" && content[0] <= "z") ||
-    (content[0] >= "A" && content[0] <= "Z")
-  ) {
-    return (
-      "You are ChatGPT, a LLM model trained by OpenAI. \nplease answer my following question\nQ: " +
-      content +
-      "\nA: "
-    );
+
+// 根据用户id构造用户会话
+function buildSessionQuery(sessionId, question) {
+  // 根据中英文设置不同的 prompt
+  let prompt = "你是 ChatGPT, 一个由 OpenAI 训练的大型语言模型, 你旨在回答并解决人们的任何问题，并且可以使用多种语言与人交流。\n请回答我下面的问题\n";
+  if ((question[0] >= "a" && question[0] <= "z") || (question[0] >= "A" && question[0] <= "Z")) {
+    return "You are ChatGPT, a LLM model trained by OpenAI. \nplease answer my following question\n";
   }
 
-  return (
-    "你是 ChatGPT, 一个由 OpenAI 训练的大型语言模型, 你旨在回答并解决人们的任何问题，并且可以使用多种语言与人交流。\n请回答我下面的问题\nQ: " +
-    content +
-    "\nA: "
-  );
+  // 从 session 中取出历史记录构造 question
+  let userSession = glboalSession.get(sessionId);
+  if (userSession){
+      for (conversation of userSession) {
+          prompt += "Q: " + conversation.question + "\nA: " + conversation.answer + "\n\n";
+      }
+  }
+
+  // 拼接最新 question
+  return prompt + "Q: " + question + "\nA: ";
+}
+
+// 保存用户会话
+function saveSession(sessionId, question, answer) {
+  let conversation = { question, answer };
+  let userSession = glboalSession.get(sessionId);
+  
+  // 有历史会话存在则追加并判断是否需要抛弃历史，否则新建会话并保存
+  if (userSession) {
+    userSession.push(conversation);
+    discardConversation(userSession);
+  } else {
+    glboalSession.set(sessionId, [conversation]);
+  }
+}
+
+// 如果历史会话记录大于OPENAI_MAX_TOKEN，则第一条开始抛弃超过限制的对话
+function discardConversation(userSession) {
+  let count = 0;
+  let countList = [];
+  let sessionLen = userSession.length;
+  for (i = sessionLen - 1; i >= 0; i--) {
+    count += userSession[i].question.length + userSession[i].answer.length;
+    countList.push(count);
+  }
+  for (c of countList) {
+    if (c > OPENAI_MAX_TOKEN) {
+      userSession.shift();
+    }
+  }
 }
 
 // 通过 OpenAI API 获取回复
-async function getOpenAIReply(content) {
-  var prompt = getPrompt(content.trim());
+async function getOpenAIReply(prompt) {
+  logger("send prompt: " + prompt);
 
   var data = JSON.stringify({
     model: OPENAI_MODEL,
@@ -233,7 +263,11 @@ module.exports = async function (params, context) {
       }
       // 是文本消息，直接回复
       const userInput = JSON.parse(params.event.message.content);
-      const openaiResponse = await getOpenAIReply(userInput.text);
+      const question = userInput.text;
+      const sessionId = params.event.message.chat_id + params.event.sender.sender_id.user_id;
+      const prompt = buildSessionQuery(sessionId, question);
+      const openaiResponse = await getOpenAIReply(prompt);
+      saveSession(sessionId, question, openaiResponse)
       await reply(messageId, openaiResponse);
       return { code: 0 };
     }
@@ -255,7 +289,10 @@ module.exports = async function (params, context) {
       }
       const userInput = JSON.parse(params.event.message.content);
       const question = userInput.text.replace("@_user_1", "");
-      const openaiResponse = await getOpenAIReply(question);
+      const sessionId = params.event.message.chat_id + params.event.sender.sender_id.user_id;
+      const prompt = buildSessionQuery(sessionId, question);
+      const openaiResponse = await getOpenAIReply(prompt);
+      saveSession(sessionId, question, openaiResponse)
       await reply(messageId, openaiResponse);
       return { code: 0 };
     }
