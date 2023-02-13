@@ -3,6 +3,7 @@ const aircode = require("aircode");
 const lark = require("@larksuiteoapi/node-sdk");
 var axios = require("axios");
 const EventDB = aircode.db.table("event");
+const MsgTable = aircode.db.table("msg"); // 用于保存历史会话的表
 
 // 如果你不想配置环境变量，或环境变量不生效，则可以把结果填写在每一行最后的 "" 内部
 const FEISHU_APP_ID = process.env.APPID || ""; // 飞书的应用 ID
@@ -11,8 +12,6 @@ const FEISHU_BOTNAME = process.env.BOTNAME || ""; // 飞书机器人的名字
 const OPENAI_KEY = process.env.KEY || ""; // OpenAI 的 Key
 const OPENAI_MODEL = process.env.MODEL || "text-davinci-003"; // 使用的模型
 const OPENAI_MAX_TOKEN = process.env.MAX_TOKEN || 1024; // 最大 token 的值
-
-const globalSession = new Map(); // 用于保存历史会话的map对象
 
 const client = new lark.Client({
   appId: FEISHU_APP_ID,
@@ -45,20 +44,18 @@ async function reply(messageId, content) {
 }
 
 
-// 根据用户id构造用户会话
-function buildSessionQuery(sessionId, question) {
+// 根据sessionId构造用户会话
+async function buildConversation(sessionId, question) {
   // 根据中英文设置不同的 prompt
   let prompt = "你是 ChatGPT, 一个由 OpenAI 训练的大型语言模型, 你旨在回答并解决人们的任何问题，并且可以使用多种语言与人交流。\n请回答我下面的问题\n";
   if ((question[0] >= "a" && question[0] <= "z") || (question[0] >= "A" && question[0] <= "Z")) {
-    return "You are ChatGPT, a LLM model trained by OpenAI. \nplease answer my following question\n";
+    prompt = "You are ChatGPT, a LLM model trained by OpenAI. \nplease answer my following question\n";
   }
 
-  // 从 session 中取出历史记录构造 question
-  let userSession = globalSession.get(sessionId);
-  if (userSession){
-      for (conversation of userSession) {
-          prompt += "Q: " + conversation.question + "\nA: " + conversation.answer + "\n\n";
-      }
+  // 从 MsgTable 表中取出历史记录构造 question
+  const historyMsgs = await MsgTable.where({ sessionId }).find();
+  for (const conversation of historyMsgs) {
+      prompt += "Q: " + conversation.question + "\nA: " + conversation.answer + "\n\n";
   }
 
   // 拼接最新 question
@@ -66,38 +63,44 @@ function buildSessionQuery(sessionId, question) {
 }
 
 // 保存用户会话
-function saveSession(sessionId, question, answer) {
-  let conversation = { question, answer };
-  let userSession = globalSession.get(sessionId);
-  
-  // 有历史会话存在则追加并判断是否需要抛弃历史，否则新建会话并保存
-  if (userSession) {
-    userSession.push(conversation);
-    discardConversation(userSession);
-  } else {
-    globalSession.set(sessionId, [conversation]);
+async function saveConversation(sessionId, question, answer) {
+  const msgSize =  question.length + answer.length
+  const result = await MsgTable.save({
+    sessionId,
+    question,
+    answer,
+    msgSize,
+  });
+  if (result) {
+    // 有历史会话是否需要抛弃
+    await discardConversation(sessionId);
   }
 }
 
-// 如果历史会话记录大于OPENAI_MAX_TOKEN，则第一条开始抛弃超过限制的对话
-function discardConversation(userSession) {
-  let count = 0;
-  let countList = [];
-  let sessionLen = userSession.length;
-  for (i = sessionLen - 1; i >= 0; i--) {
-    count += userSession[i].question.length + userSession[i].answer.length;
-    countList.push(count);
+// 如果历史会话记录大于OPENAI_MAX_TOKEN，则从第一条开始抛弃超过限制的对话
+async function discardConversation(sessionId) {
+  let totalSize = 0;
+  const countList = [];
+  const historyMsgs = await MsgTable.where({ sessionId }).sort({ createdAt: -1 }).find();
+  const historyMsgLen = historyMsgs.length;
+  for (let i = 0; i < historyMsgLen; i++) {
+    const msgId = historyMsgs[i]._id;
+    totalSize += historyMsgs[i].msgSize;
+    countList.push({
+      msgId,
+      totalSize,
+    });
   }
   for (c of countList) {
-    if (c > OPENAI_MAX_TOKEN) {
-      userSession.shift();
+    if (c.totalSize > OPENAI_MAX_TOKEN) {
+      await MsgTable.where({_id: c.msgId}).delete();
     }
   }
 }
 
 // 清除历史会话
-function clearSession(sessionId) {
-  globalSession.delete(sessionId);
+async function clearConversation(sessionId) {
+  return await MsgTable.where({ sessionId }).delete();
 }
 
 // 通过 OpenAI API 获取回复
@@ -273,13 +276,13 @@ module.exports = async function (params, context) {
       const userInput = JSON.parse(params.event.message.content);
       const question = userInput.text;
       if (question.trim() == "#清除记忆") {
-        clearSession(sessionId)
+        await clearConversation(sessionId)
         await reply(messageId, "记忆已清除");
         return { code: 0 };
       }
-      const prompt = buildSessionQuery(sessionId, question);
+      const prompt = await buildConversation(sessionId, question);
       const openaiResponse = await getOpenAIReply(prompt);
-      saveSession(sessionId, question, openaiResponse)
+      await saveConversation(sessionId, question, openaiResponse)
       await reply(messageId, openaiResponse);
       return { code: 0 };
     }
@@ -302,13 +305,13 @@ module.exports = async function (params, context) {
       const userInput = JSON.parse(params.event.message.content);
       const question = userInput.text.replace("@_user_1", "");
       if (question.trim() == "#清除记忆") {
-        clearSession(sessionId);
+        await clearConversation(sessionId);
         await reply(messageId, "记忆已清除");
         return { code: 0 };
       }
-      const prompt = buildSessionQuery(sessionId, question);
+      const prompt = await buildConversation(sessionId, question);
       const openaiResponse = await getOpenAIReply(prompt);
-      saveSession(sessionId, question, openaiResponse)
+      await saveConversation(sessionId, question, openaiResponse)
       await reply(messageId, openaiResponse);
       return { code: 0 };
     }
