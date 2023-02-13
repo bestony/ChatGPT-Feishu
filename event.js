@@ -95,6 +95,11 @@ function discardConversation(userSession) {
   }
 }
 
+// 清除历史会话
+function clearSession(sessionId) {
+  globalSession.delete(sessionId);
+}
+
 // 通过 OpenAI API 获取回复
 async function getOpenAIReply(prompt) {
   logger("send prompt: " + prompt);
@@ -244,6 +249,9 @@ module.exports = async function (params, context) {
   if ((params.header.event_type === "im.message.receive_v1")) {
     let eventId = params.header.event_id;
     let messageId = params.event.message.message_id;
+    let chatId = params.event.message.chat_id;
+    let senderId = params.event.sender.sender_id.user_id;
+    let sessionId = chatId + senderId;
 
     // 对于同一个事件，只处理一次
     const count = await EventDB.where({ event_id: eventId }).count();
@@ -264,7 +272,11 @@ module.exports = async function (params, context) {
       // 是文本消息，直接回复
       const userInput = JSON.parse(params.event.message.content);
       const question = userInput.text;
-      const sessionId = params.event.message.chat_id + params.event.sender.sender_id.user_id;
+      if (question.trim() == "#清除记忆") {
+        clearSession(sessionId)
+        await reply(messageId, "记忆已清除");
+        return { code: 0 };
+      }
       const prompt = buildSessionQuery(sessionId, question);
       const openaiResponse = await getOpenAIReply(prompt);
       saveSession(sessionId, question, openaiResponse)
@@ -289,7 +301,11 @@ module.exports = async function (params, context) {
       }
       const userInput = JSON.parse(params.event.message.content);
       const question = userInput.text.replace("@_user_1", "");
-      const sessionId = params.event.message.chat_id + params.event.sender.sender_id.user_id;
+      if (question.trim() == "#清除记忆") {
+        clearSession(sessionId);
+        await reply(messageId, "记忆已清除");
+        return { code: 0 };
+      }
       const prompt = buildSessionQuery(sessionId, question);
       const openaiResponse = await getOpenAIReply(prompt);
       saveSession(sessionId, question, openaiResponse)
