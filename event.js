@@ -12,7 +12,7 @@ const OPENAI_KEY = process.env.KEY || ""; // OpenAI 的 Key
 const OPENAI_MODEL = process.env.MODEL || "text-davinci-003"; // 使用的模型
 const OPENAI_MAX_TOKEN = process.env.MAX_TOKEN || 1024; // 最大 token 的值
 
-const glboalSession = new Map(); // 用于保存历史会话的map对象
+const globalSession = new Map(); // 用于保存历史会话的map对象
 
 const client = new lark.Client({
   appId: FEISHU_APP_ID,
@@ -54,7 +54,7 @@ function buildSessionQuery(sessionId, question) {
   }
 
   // 从 session 中取出历史记录构造 question
-  let userSession = glboalSession.get(sessionId);
+  let userSession = globalSession.get(sessionId);
   if (userSession){
       for (conversation of userSession) {
           prompt += "Q: " + conversation.question + "\nA: " + conversation.answer + "\n\n";
@@ -68,14 +68,14 @@ function buildSessionQuery(sessionId, question) {
 // 保存用户会话
 function saveSession(sessionId, question, answer) {
   let conversation = { question, answer };
-  let userSession = glboalSession.get(sessionId);
+  let userSession = globalSession.get(sessionId);
   
   // 有历史会话存在则追加并判断是否需要抛弃历史，否则新建会话并保存
   if (userSession) {
     userSession.push(conversation);
     discardConversation(userSession);
   } else {
-    glboalSession.set(sessionId, [conversation]);
+    globalSession.set(sessionId, [conversation]);
   }
 }
 
