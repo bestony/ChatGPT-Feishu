@@ -38,7 +38,7 @@ async function reply(messageId, content) {
     },
   });
   } catch(e){
-    logger("send message to feishu erro",e,messageId,content);
+    logger("send message to feishu error",e,messageId,content);
   }
 }
 
