@@ -1,4 +1,4 @@
-// @version 0.0.5 新增 logger 函数和加密事件的输出
+// @version 0.0.6 新增 429 限频场景下的兼容
 const aircode = require("aircode");
 const lark = require("@larksuiteoapi/node-sdk");
 var axios = require("axios");
@@ -39,7 +39,7 @@ async function reply(messageId, content) {
     },
   });
   } catch(e){
-    logger("send message to feishu erro",e,messageId,content);
+    logger("send message to feishu error",e,messageId,content);
   }
 }
 
@@ -131,6 +131,10 @@ async function getOpenAIReply(prompt) {
 
   try{
       const response = await axios(config);
+    
+      if (response.status === 429) {
+        return '请求过于频繁，请稍后再试';
+      }
       // 去除多余的换行
       return response.data.choices[0].text.replace("\n\n", "");
     
