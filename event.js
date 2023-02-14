@@ -177,9 +177,10 @@ async function doctor() {
     code: 0,
     message: {
       zh_CN:
-        "✅ Configuration is correct, you can use this bot in your FeiShu App",
+      "✅ 配置成功，接下来你可以在飞书应用当中使用机器人来完成你的工作。",
       en_US:
-        "✅ 配置成功，接下来你可以在飞书应用当中使用机器人来完成你的工作。",
+      "✅ Configuration is correct, you can use this bot in your FeiShu App",
+      
     },
     meta: {
       FEISHU_APP_ID,
