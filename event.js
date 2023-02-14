@@ -103,6 +103,39 @@ async function clearConversation(sessionId) {
   return await MsgTable.where({ sessionId }).delete();
 }
 
+// 指令处理
+async function cmdProcess(cmdParams) {
+  switch (cmdParams && cmdParams.action) {
+    case "/help":
+      await cmdHelp(cmdParams.messageId);
+      break;
+    case "/clear": 
+      await cmdClear(cmdParams.sessionId, cmdParams.messageId);
+      break;
+    default:
+      await cmdHelp(cmdParams.messageId);
+      break;
+  }
+  return { code: 0 }
+} 
+
+// 帮助指令
+async function cmdHelp(messageId) {
+  helpText = `ChatGPT 指令使用指南
+
+Usage:
+    /clear    清除上下文
+    /help     获取更多帮助
+  `
+  await reply(messageId, helpText);
+}
+
+// 清除记忆指令
+async function cmdClear(sessionId, messageId) {
+  await clearConversation(sessionId)
+  await reply(messageId, "✅记忆已清除");
+}
+
 // 通过 OpenAI API 获取回复
 async function getOpenAIReply(prompt) {
   logger("send prompt: " + prompt);
@@ -279,10 +312,9 @@ module.exports = async function (params, context) {
       // 是文本消息，直接回复
       const userInput = JSON.parse(params.event.message.content);
       const question = userInput.text;
-      if (question.trim() == "#清除记忆") {
-        await clearConversation(sessionId)
-        await reply(messageId, "记忆已清除");
-        return { code: 0 };
+      const action = question.trim();
+      if (action.startsWith("/")) {
+        return await cmdProcess({action, sessionId, messageId});
       }
       const prompt = await buildConversation(sessionId, question);
       const openaiResponse = await getOpenAIReply(prompt);
@@ -308,10 +340,9 @@ module.exports = async function (params, context) {
       }
       const userInput = JSON.parse(params.event.message.content);
       const question = userInput.text.replace("@_user_1", "");
-      if (question.trim() == "#清除记忆") {
-        await clearConversation(sessionId);
-        await reply(messageId, "记忆已清除");
-        return { code: 0 };
+      const action = question.trim();
+      if (action.startsWith("/")) {
+        return await cmdProcess({action, sessionId, messageId});
       }
       const prompt = await buildConversation(sessionId, question);
       const openaiResponse = await getOpenAIReply(prompt);
