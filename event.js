@@ -251,16 +251,33 @@ module.exports = async function (params, context) {
         !params.event.message.mentions ||
         params.event.message.mentions.length === 0
       ) {
-        logger("not process message without mention");
+        logger('not process message without mention');
         return { code: 0 };
       }
+
+      // 检查是否 mention 机器人
+      let isMentionBot = false;
+      for (let mention of params.event.message.mentions) {
+        if (mention.name === FEISHU_BOTNAME) {
+          isMentionBot = true;
+          break;
+        } else if (
+          /[GPT|AI]/.test(mention.name) &&
+          /[^\u0000-\u00ff]/.test(mention.name)
+        ) {
+          logger(
+            'FEISHU_BOTNAME contains Chinese characters, which may cause issues receiving group chat messages when used with Aircode.'
+          );
+        }
+      }
+
       // 没有 mention 机器人，则退出。
-      if (params.event.message.mentions[0].name != FEISHU_BOTNAME) {
-        logger("bot name not equal first mention name ");
+      if (!isMentionBot) {
+        logger('The all mention name is not equal to FEISHU_BOTNAME.');
         return { code: 0 };
       }
       const userInput = JSON.parse(params.event.message.content);
-      const question = userInput.text.replace("@_user_1", "");
+      const question = userInput.text.replace(/@_user_\d+/g, "");
       const openaiResponse = await getOpenAIReply(question);
       await reply(messageId, openaiResponse);
       return { code: 0 };
