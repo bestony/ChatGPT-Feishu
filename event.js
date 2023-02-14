@@ -91,7 +91,7 @@ async function discardConversation(sessionId) {
       totalSize,
     });
   }
-  for (c of countList) {
+  for (const c of countList) {
     if (c.totalSize > OPENAI_MAX_TOKEN) {
       await MsgTable.where({_id: c.msgId}).delete();
     }
