@@ -42,28 +42,52 @@ async function reply(messageId, content) {
   }
 }
 
-// 根据中英文设置不同的 prompt
+// 语种检查
+function detectLanguage(text) {
+  if (/[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(text)) {
+    return "ko"; // 韩文
+  } else if (/[\u3040-\u30ff]/.test(text)) {
+    return "ja"; // 日文
+  } else if (/[a-zA-Z]/.test(text)) {
+    return "en"; // 英文
+  } else {
+    return "zh"; // 中文（默认）
+  }
+}
+
+// 根据中日韩英语，决定不同的引导词
 function getPrompt(content) {
   if (content.length === 0) {
     return "";
   }
-  if (
-    (content[0] >= "a" && content[0] <= "z") ||
-    (content[0] >= "A" && content[0] <= "Z")
-  ) {
+  let lang = detectLanguage(content);
+  if (lang === "en") {
     return (
       "You are ChatGPT, a LLM model trained by OpenAI. \nplease answer my following question\nQ: " +
       content +
       "\nA: "
     );
+  } else if (lang === "ko") {
+    return (
+      "당신은 오픈AI가 교육한 ChatGPT입니다. \n아래 질문에 대답해주세요.\nQ: " +
+      content +
+      "\nA: "
+    );
+  } else if (lang === "ja") {
+    return (
+      "あなたはOpenAIによって訓練されたChatGPTです。 \n以下の質問に答えてください。\nQ: " +
+      content +
+      "\nA: "
+    );
+  } else {
+    return (
+      "你是 ChatGPT, 一个由 OpenAI 训练的大型语言模型, 你旨在回答并解决人们的任何问题，并且可以使用多种语言与人交流。\n请回答我下面的问题\nQ: " +
+      content +
+      "\nA: "
+    );
   }
-
-  return (
-    "你是 ChatGPT, 一个由 OpenAI 训练的大型语言模型, 你旨在回答并解决人们的任何问题，并且可以使用多种语言与人交流。\n请回答我下面的问题\nQ: " +
-    content +
-    "\nA: "
-  );
 }
+
 
 // 通过 OpenAI API 获取回复
 async function getOpenAIReply(content) {
