@@ -312,7 +312,7 @@ module.exports = async function (params, context) {
       }
       // 是文本消息，直接回复
       const userInput = JSON.parse(params.event.message.content);
-      const question = userInput.text;
+      const question = userInput.text.replace("@_user_1", "");
       const action = question.trim();
       if (action.startsWith("/")) {
         return await cmdProcess({action, sessionId, messageId});
