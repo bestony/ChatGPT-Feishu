@@ -255,15 +255,19 @@ module.exports = async function (params, context) {
         return { code: 0 };
       }
 
-      // 检查是否 mention 机器人
+      // 检查是否 mention 机器人，如果是记录序号
       let isMentionBot = false;
-      for (let mention of params.event.message.mentions) {
-        if (mention.name === FEISHU_BOTNAME) {
+      let mentions = params.event.message.mentions;
+      let mentionIndex = null;
+
+      for (let i = 0; i < mentions.length; i++) {
+        if (mentions[i].name === FEISHU_BOTNAME) {
           isMentionBot = true;
+          mentionIndex = i + 1;
           break;
         } else if (
-          /[GPT|AI]/.test(mention.name) &&
-          /[^\u0000-\u00ff]/.test(mention.name)
+          /[GPT|AI]/.test(mentions[i].name) &&
+          /[^\u0000-\u00ff]/.test(mentions[i].name)
         ) {
           logger(
             'FEISHU_BOTNAME contains Chinese characters, which may cause issues receiving group chat messages when used with Aircode.'
@@ -277,7 +281,10 @@ module.exports = async function (params, context) {
         return { code: 0 };
       }
       const userInput = JSON.parse(params.event.message.content);
-      const question = userInput.text.replace(/@_user_\d+/g, "");
+      const question = userInput.text.replace(
+        new RegExp('@user' + mentionIndex, 'g'), // 置空被 @ 的机器人
+        ''
+      );
       const openaiResponse = await getOpenAIReply(question);
       await reply(messageId, openaiResponse);
       return { code: 0 };
