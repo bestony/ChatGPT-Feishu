@@ -251,7 +251,7 @@ module.exports = async function (params, context) {
         !params.event.message.mentions ||
         params.event.message.mentions.length === 0
       ) {
-        logger('not process message without mention');
+        logger("not process message without mention");
         return { code: 0 };
       }
 
