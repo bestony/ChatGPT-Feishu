@@ -1,4 +1,4 @@
-// @version 0.0.6 新增 429 限频场景下的兼容
+// @version 0.0.7 支持多轮对话的上下文能力
 const aircode = require("aircode");
 const lark = require("@larksuiteoapi/node-sdk");
 var axios = require("axios");
