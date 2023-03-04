@@ -1,4 +1,4 @@
-// @version 0.0.6 新增 429 限频场景下的兼容
+// @version 0.0.8 更新 OpenAI 3.5 模型 & 并新增 Axios 超时配置，避免无响应问题
 const aircode = require("aircode");
 const lark = require("@larksuiteoapi/node-sdk");
 var axios = require("axios");
