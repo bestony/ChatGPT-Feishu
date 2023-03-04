@@ -153,6 +153,7 @@ async function getOpenAIReply(prompt) {
       "Content-Type": "application/json",
     },
     data: data,
+    timeout: 50000
   };
 
   try{
