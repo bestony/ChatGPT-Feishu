@@ -58,6 +58,8 @@ async function buildConversation(sessionId, question) {
 
   // 拼接最新 question
   prompt += "{\"role\": \"user\", \"content\": \"" + question + "\"}]"
+  // 去除换行符号，避免因换行导致json.parse报错
+  prompt = prompt.replace(/\t|\n|\v|\r|\f/g,'');
   return JSON.parse(prompt);
 }
 
