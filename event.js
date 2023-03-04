@@ -21,7 +21,7 @@ const client = new lark.Client({
 
 // 日志辅助函数，请贡献者使用此函数打印关键日志
 function logger(param) {
-  console.warn(`[CF]`, param);
+  console.debug(`[CF]`, param);
 }
 
 // 回复消息
