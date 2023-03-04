@@ -46,19 +46,19 @@ async function reply(messageId, content) {
 
 // 根据sessionId构造用户会话
 async function buildConversation(sessionId, question) {
-  let prompt = "[";
-
+  let prompt = [];
+  
   // 从 MsgTable 表中取出历史记录构造 question
   const historyMsgs = await MsgTable.where({ sessionId }).find();
   for (const conversation of historyMsgs) {
       // {"role": "system", "content": "You are a helpful assistant."},
-      prompt += "{\"role\": \"user\", \"content\": \"" + conversation.question + "\"},"
-      prompt += "{\"role\": \"assistant\", \"content\": \"" + conversation.answer + "\"},"
+      prompt.push({"role": "user", "content": conversation.question})
+      prompt.push({"role": "assistant", "content": conversation.answer})
   }
 
   // 拼接最新 question
-  prompt += "{\"role\": \"user\", \"content\": \"" + question + "\"}]"
-  return JSON.parse(prompt);
+  prompt.push({"role": "user", "content": question})
+  return prompt;
 }
 
 // 保存用户会话
@@ -232,7 +232,7 @@ async function doctor() {
       code: 1,
       message: {
         zh_CN:
-          "你配置的 OpenAI Key 是错误的，请检查后重试。飞书应用的 APPID 以 cli_ 开头。",
+          "你配置的 OpenAI Key 是错误的，请检查后重试。OpenAI 的 KEY 以 sk- 开头。",
         en_US:
           "Your OpenAI Key is Wrong, Please Check and call again. FeiShu APPID must Start with cli",
       },
@@ -254,6 +254,27 @@ async function doctor() {
       FEISHU_BOTNAME,
     },
   };
+}
+
+async function handleReply(userInput, sessionId, messageId, eventId) {
+  logger("userInput: " + userInput);
+  const question = userInput.text.replace("@_user_1", "");
+  logger("question: " + question);
+  const action = question.trim();
+  if (action.startsWith("/")) {
+    return await cmdProcess({action, sessionId, messageId});
+  }
+  const prompt = await buildConversation(sessionId, question);
+  const openaiResponse = await getOpenAIReply(prompt);
+  await saveConversation(sessionId, question, openaiResponse)
+  await reply(messageId, openaiResponse);
+
+  // update content to the event record
+  const evt_record = await EventDB.where({ event_id: eventId }).findOne();
+  console.log(evt_record);
+  evt_record.content = userInput.text;
+  await EventDB.save(evt_record);
+  return { code: 0 };
 }
 
 module.exports = async function (params, context) {
@@ -306,23 +327,7 @@ module.exports = async function (params, context) {
       }
       // 是文本消息，直接回复
       const userInput = JSON.parse(params.event.message.content);
-      const question = userInput.text.replace("@_user_1", "");
-      const action = question.trim();
-      if (action.startsWith("/")) {
-        return await cmdProcess({action, sessionId, messageId});
-      }
-      const prompt = await buildConversation(sessionId, question);
-      const openaiResponse = await getOpenAIReply(prompt);
-      await saveConversation(sessionId, question, openaiResponse)
-      await reply(messageId, openaiResponse);
-
-      // update content to the event record
-      const evt_record = await EventDB.where({ event_id: eventId }).findOne();
-      console.log(evt_record);
-      evt_record.content = userInput.text;
-      await EventDB.save(evt_record);
-
-      return { code: 0 };
+      return await handleReply(userInput, sessionId, messageId, eventId);
     }
 
     // 群聊，需要 @ 机器人
@@ -341,22 +346,7 @@ module.exports = async function (params, context) {
         return { code: 0 };
       }
       const userInput = JSON.parse(params.event.message.content);
-      const question = userInput.text.replace("@_user_1", "");
-      const action = question.trim();
-      if (action.startsWith("/")) {
-        return await cmdProcess({action, sessionId, messageId});
-      }
-      const prompt = await buildConversation(sessionId, question);
-      const openaiResponse = await getOpenAIReply(prompt);
-      await saveConversation(sessionId, question, openaiResponse)
-      await reply(messageId, openaiResponse);
-
-      // update content to the event record
-      const evt_record = await EventDB.where({ event_id: eventId }).findOne();
-      evt_record.content = question;
-      await EventDB.save(evt_record);
-
-      return { code: 0 };
+      return await handleReply(userInput, sessionId, messageId, eventId);
     }
   }
 
