@@ -1,4 +1,4 @@
-// @version 0.0.8 更新 OpenAI 3.5 模型 & 并新增 Axios 超时配置，避免无响应问题
+// @version 0.0.9 调整了 axios 的报错的输出，以便于调试。
 const aircode = require("aircode");
 const lark = require("@larksuiteoapi/node-sdk");
 var axios = require("axios");
@@ -137,7 +137,6 @@ async function cmdClear(sessionId, messageId) {
 
 // 通过 OpenAI API 获取回复
 async function getOpenAIReply(prompt) {
-  logger("send prompt: " + JSON.stringify(prompt));
 
   var data = JSON.stringify({
     model: OPENAI_MODEL,
@@ -166,7 +165,7 @@ async function getOpenAIReply(prompt) {
       return response.data.choices[0].message.content.replace("\n\n", "");
     
   }catch(e){
-     logger(e)
+     logger(e.response.data)
      return "问题太难了 出错了. (uДu〃).";
   }
 
@@ -257,7 +256,6 @@ async function doctor() {
 }
 
 async function handleReply(userInput, sessionId, messageId, eventId) {
-  logger("userInput: " + userInput);
   const question = userInput.text.replace("@_user_1", "");
   logger("question: " + question);
   const action = question.trim();
@@ -271,7 +269,6 @@ async function handleReply(userInput, sessionId, messageId, eventId) {
 
   // update content to the event record
   const evt_record = await EventDB.where({ event_id: eventId }).findOne();
-  console.log(evt_record);
   evt_record.content = userInput.text;
   await EventDB.save(evt_record);
   return { code: 0 };
@@ -312,7 +309,7 @@ module.exports = async function (params, context) {
     // 对于同一个事件，只处理一次
     const count = await EventDB.where({ event_id: eventId }).count();
     if (count != 0) {
-      logger("deal repeat event");
+      logger("skip repeat event");
       return { code: 1 };
     }
     await EventDB.save({ event_id: eventId });
