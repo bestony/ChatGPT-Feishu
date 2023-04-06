@@ -113,6 +113,8 @@ https://user-images.githubusercontent.com/13283837/217905601-6e1ff237-5275-4deb-
 
 ## 有问题沟通可加群
 
+> 由于飞书更新了版本策略，我暂时没钱升级飞书租户，大家有问题可以发邮箱咨询 bestony@linux.com
+
 ![image](https://user-images.githubusercontent.com/13283837/218001986-2b79cc73-52c9-43db-b07e-bf78cc0cedab.png)
 
 
