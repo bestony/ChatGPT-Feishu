@@ -113,7 +113,7 @@ https://user-images.githubusercontent.com/13283837/217905601-6e1ff237-5275-4deb-
 
 ## 有问题沟通可加群
 
-![image](https://user-images.githubusercontent.com/13283837/218001986-2b79cc73-52c9-43db-b07e-bf78cc0cedab.png)
+![飞书20230418-015544](https://user-images.githubusercontent.com/13283837/232570671-1058555f-c9e5-4f64-889b-1d8efd0101ba.png)
 
 
 ## FAQ
