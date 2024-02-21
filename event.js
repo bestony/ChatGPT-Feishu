@@ -5,6 +5,8 @@ var axios = require("axios");
 const EventDB = aircode.db.table("event");
 const MsgTable = aircode.db.table("msg"); // 用于保存历史会话的表
 
+const {Configuration, OpenAIApi} = require("openai");
+
 // 如果你不想配置环境变量，或环境变量不生效，则可以把结果填写在每一行最后的 "" 内部
 const FEISHU_APP_ID = process.env.APPID || ""; // 飞书的应用 ID
 const FEISHU_APP_SECRET = process.env.SECRET || ""; // 飞书的应用的 Secret
@@ -12,6 +14,11 @@ const FEISHU_BOTNAME = process.env.BOTNAME || ""; // 飞书机器人的名字
 const OPENAI_KEY = process.env.KEY || ""; // OpenAI 的 Key
 const OPENAI_MODEL = process.env.MODEL || "gpt-3.5-turbo"; // 使用的模型
 const OPENAI_MAX_TOKEN = process.env.MAX_TOKEN || 1024; // 最大 token 的值
+
+const configuration = new Configuration({
+  apiKey: OPENAI_KEY,
+});
+const openai = new OpenAIApi(configuration);
 
 const client = new lark.Client({
   appId: FEISHU_APP_ID,
@@ -22,6 +29,15 @@ const client = new lark.Client({
 // 日志辅助函数，请贡献者使用此函数打印关键日志
 function logger(param) {
   console.debug(`[CF]`, param);
+}
+
+async function getOpenaiImageUrl(prompt){
+  const resp = await openai.createImage({
+    prompt:prompt,
+    n:1,
+    size:"1024x1024"
+  });
+  return resp.data.data[0].url;
 }
 
 // 回复消息
@@ -104,6 +120,14 @@ async function clearConversation(sessionId) {
 
 // 指令处理
 async function cmdProcess(cmdParams) {
+  if(cmdParams && cmdParams.action.startsWith("/image")){
+    len = cmdParams.action.length;
+    prompt = cmdParams.action.substring(7,len);
+    logger(prompt)
+    url = await getOpenaiImageUrl(prompt);
+    await reply(cmdParams.messageId,url);
+    return;
+  }
   switch (cmdParams && cmdParams.action) {
     case "/help":
       await cmdHelp(cmdParams.messageId);
@@ -125,6 +149,7 @@ async function cmdHelp(messageId) {
 Usage:
     /clear    清除上下文
     /help     获取更多帮助
+    /image ${提示词} 根据提示词生成图片
   `
   await reply(messageId, helpText);
 }
